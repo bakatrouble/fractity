@@ -32,7 +32,7 @@ public class FractityMaster : MonoBehaviour {
 
             
             _target = new RenderTexture(Screen.width, Screen.height, 0,
-                RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+                RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
             _target.enableRandomWrite = true;
             _target.Create();
         }
