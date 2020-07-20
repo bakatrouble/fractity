@@ -1,0 +1,142 @@
+RWTexture2D<float4> Result;
+StructuredBuffer<float3> _Palette;
+
+#pragma kernel CSMain
+#include "Complex.hlsl"
+
+#define MAX_ITERATION 256
+
+float _ScaleFactor;
+float2 _Offset;
+uint _Type = 0;
+float _Power = 2.0f;
+
+[numthreads(32,32,1)]
+void CSMain (uint3 id : SV_DispatchThreadID) {
+    uint width, height;
+    Result.GetDimensions(width, height);
+
+    double x = (id.x + _Offset.x - (double) width / 2.0f) / 180.0f * (double) _ScaleFactor;
+    double y = (id.y + _Offset.y - (double) height / 2.0f) / 180.0f * (double) -_ScaleFactor;
+    double2 xy = double2(x, y);
+    uint it = 0;
+    double2 z, c;
+
+    switch (_Type) {
+        case 0:
+            // Mandelbrot
+            z = double2(0, 0);
+            while (it < MAX_ITERATION && c_abs(z) <= 4.0f) {
+                z = c_add(c_mul(z, z), xy);
+                it++;
+            }
+            break;
+        case 1:
+            // Burning ship
+            z = xy;
+            while (it < MAX_ITERATION && c_abs(z) <= 4.0f) {
+                z = c_add(c_mul(z, z), xy);
+                z = abs(z);
+                it++;
+            }
+            break;
+        case 2:
+            // Multicorn
+            z = xy;
+            while (it < MAX_ITERATION && c_abs(z) <= 4.0f) {
+                z = c_add(c_pow(c_con(z), _Power), xy);
+                it++;
+            }
+            break;
+        case 3:
+            // Julia set 1
+            c = double2(.285f, .01f);
+            z = xy;
+            while (it < MAX_ITERATION && c_abs(z) <= 4.0f) {
+                z = c_add(c_mul(z, z), c);
+                it++;
+            }
+            break;
+        case 4:
+            // Julia set 2
+            c = double2(-0.7f, 0.27015f);
+            z = xy;
+            while (it < MAX_ITERATION && c_abs(z) <= 4.0f) {
+                z = c_add(c_mul(z, z), c);
+                it++;
+            }
+            break;
+        default:
+            it = 128;
+            break;
+    }
+
+
+    Result[id.xy] =  float4(_Palette[it], 1);
+}
+
+
+/* case 0:
+// Mandelbrot
+z = double2(0, 0);
+while (it < MAX_ITERATION && zx * zx + zy * zy <= 4.0f) {
+xtemp = zx * zx - zy * zy + x;
+zy = 2 * zx * zy + y;
+zx = xtemp;
+it++;
+}
+break;
+case 1:
+// Burning ship
+zx = x; zy = y;
+while (it < MAX_ITERATION && zx * zx + zy * zy <= 4.0f) {
+xtemp = zx * zx - zy * zy + x;
+zy = abs(2 * zx * zy + y);
+zx = abs(xtemp);
+it++;
+}
+break;
+case 2:
+// Tricorn
+zx = x; zy = y;
+while (it < MAX_ITERATION && zx * zx + zy * zy <= 4.0f) {
+xtemp = pow(zx * zx + zy * zy, (float) _Power / 2.0f) * cos(_Power * atan2(zy, zx)) + x;
+zy = -pow(zx * zx + zy * zy, (float) _Power / 2.0f) * sin(_Power * atan2(zy, zx)) + y;
+zx = xtemp;
+it++;
+}
+break;
+case 3:
+// Julia set 1
+cx = .285f; cy = .01f;
+zx = x; zy = y;
+while (it < MAX_ITERATION && zx * zx + zy * zy <= 4.0f) {
+xtemp = zx * zx - zy * zy + cx;
+zy = 2 * zx * zy + cy;
+zx = xtemp;
+it++;
+}
+break;
+case 4:
+// Julia set 2
+cx = -0.7f; cy = 0.27015f;
+zx = x; zy = y;
+while (it < MAX_ITERATION && zx * zx + zy * zy <= 4.0f) {
+xtemp = zx * zx - zy * zy + cx;
+zy = 2 * zx * zy + cy;
+zx = xtemp;
+it++;
+}
+break;
+case 5:
+// Newton
+zx = x; zy = y;
+while (it < MAX_ITERATION) {
+// z ^ 3
+double fx, fy;
+                
+}
+default:
+it = 128;
+break;
+*/
